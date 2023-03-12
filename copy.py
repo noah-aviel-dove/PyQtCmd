@@ -1,45 +1,53 @@
-""" Console
-Interactive console widget.  Use to add an interactive python interpreter
+"""
+Console
+
+Interactive console widget. Use to add an interactive python interpreter
 in a GUI application.
 
 Original by deanhystad available here: https://python-forum.io/thread-25117.html
-changes: PySide2 -> pyqt5
-            + line 22: QtCore.Signal(str) -> QtCore.pyqtSignal(str)
 """
 
 import sys
 import code
 import re
 from typing import Callable
-from PyQt5 import QtCore, \
-    QtGui, \
-    QtWidgets
-from contextlib import redirect_stdout, \
-    redirect_stderr
+from PyQt5 import (
+    QtCore,
+    QtGui,
+    QtWidgets,
+)
+from contextlib import (
+    redirect_stdout,
+    redirect_stderr,
+)
 
 
 class LineEdit(QtWidgets.QLineEdit):
-    """QLIneEdit with a history buffer for recalling previous lines.
+    """
+    QLineEdit with a history buffer for recalling previous lines.
     I also accept tab as input (4 spaces).
     """
     newline = QtCore.pyqtSignal(str)  # Signal when return key pressed
 
-    def __init__(self, history: int = 100) -> 'LineEdit':
+    def __init__(self, history: int = 100):
         super().__init__()
         self.historymax = history
         self.clearhistory()
         self.promptpattern = re.compile('^[>\.]')
 
     def clearhistory(self) -> None:
-        """Clear history buffer"""
+        """
+        Clear history buffer
+        """
         self.historyindex = 0
         self.historylist = []
 
     def event(self, ev: QtCore.QEvent) -> bool:
-        """Intercept tab and arrow key presses.  Insert 4 spaces
-        when tab pressed instead of moving to next contorl.  WHen
-        arrow up or down are pressed select a line from the history
-        buffer.  Emit newline signal when return key is pressed.
+        """
+        Intercept tab and arrow key presses. Insert 4 spaces when tab pressed
+        instead of moving to next control. When arrow up or down are pressed,
+        select a line from the history buffer. Emit newline signal when return
+        key is pressed.
         """
         if ev.type() == QtCore.QEvent.KeyPress:
             if ev.key() == int(QtCore.Qt.Key_Tab):
@@ -63,8 +71,8 @@ class LineEdit(QtWidgets.QLineEdit):
         return super().event(ev)
 
     def returnkey(self) -> None:
-        """Return key was pressed.  Add line to history and emit
-        the newline signal.
+        """
+        Return key was pressed. Add line to history and emit the newline signal.
         """
         text = self.text().rstrip()
         self.record(text)
@@ -72,7 +80,9 @@ class LineEdit(QtWidgets.QLineEdit):
         self.setText('')
 
     def recall(self, index: int) -> None:
-        """Select a line from the history list"""
+        """
+        Select a line from the history list
+        """
         length = len(self.historylist)
         if length > 0:
             index = max(0, min(index, length - 1))
@@ -80,7 +90,9 @@ class LineEdit(QtWidgets.QLineEdit):
             self.historyindex = index
 
     def record(self, line: str) -> None:
-        """Add line to history buffer"""
+        """
+        Add line to history buffer
+        """
         self.historyindex += 1
         while len(self.historylist) >= self.historymax - 1:
             self.historylist.pop()
@@ -89,9 +101,11 @@ class LineEdit(QtWidgets.QLineEdit):
 
 
 class Redirect:
-    """Map self.write to a function"""
+    """
+    Map `self.write` to a function
+    """
 
-    def __init__(self, func: Callable) -> 'Redirect':
+    def __init__(self, func: Callable):
         self.func = func
 
     def write(self, line: str) -> None:
@@ -99,14 +113,16 @@ class Redirect:
 
 
 class Console(QtWidgets.QWidget):
-    """A GUI version of code.InteractiveConsole."""
+    """
+    A GUI version of `code.InteractiveConsole`.
+    """
 
     def __init__(
         self,
         context=locals(),  # context for interpreter
         history: int = 20,  # max lines in history buffer
         blockcount: int = 500  # max lines in output buffer
-    ) -> 'Console':
+    ):
         super().__init__()
         self.setcontext(context)
         self.buffer = []
@@ -143,11 +159,15 @@ class Console(QtWidgets.QWidget):
         self.content.addWidget(self.inpedit, 1, 1)
 
     def setcontext(self, context):
-        """Set context for interpreter"""
+        """
+        Set context for interpreter
+        """
         self.interp = code.InteractiveInterpreter(context)
 
     def resetbuffer(self) -> None:
-        """Reset the input buffer."""
+        """
+        Reset the input buffer.
+        """
         self.buffer = []
 
     def setprompt(self, text: str):
@@ -155,7 +175,9 @@ class Console(QtWidgets.QWidget):
         self.promptdisp.setText(text)
 
     def push(self, line: str) -> None:
-        """Execute entered command.  Command may span multiple lines"""
+        """
+        Execute entered command. Command may span multiple lines
+        """
         if line == 'clear':
             self.inpedit.clearhistory()
             self.outdisplay.clear()
@@ -175,21 +197,29 @@ class Console(QtWidgets.QWidget):
                 self.resetbuffer()
 
     def setfont(self, font: QtGui.QFont) -> None:
-        """Set font for input and display widgets.  Should be monospaced"""
+        """
+        Set font for input and display widgets. Should be monospaced
+        """
         self.outdisplay.setFont(font)
         self.inpedit.setFont(font)
 
     def write(self, line: str) -> None:
-        """Capture stdout and display in outdisplay"""
+        """
+        Capture stdout and display in outdisplay
+        """
         if len(line) != 1 or ord(line[0]) != 10:
             self.writeoutput(line.rstrip(), self.outfmt)
 
     def errorwrite(self, line: str) -> None:
-        """Capture stderr and display in outdisplay"""
+        """
+        Capture stderr and display in `outdisplay`
+        """
         self.writeoutput(line, self.errfmt)
 
     def writeoutput(self, line: str, fmt: QtGui.QTextCharFormat = None) -> None:
-        """Set text formatting and display line in outdisplay"""
+        """
+        Set text formatting and display line in `outdisplay`
+        """
         if fmt is not None:
             self.outdisplay.setCurrentCharFormat(fmt)
         self.outdisplay.appendPlainText(line.rstrip())
@@ -201,7 +231,7 @@ if __name__ == '__main__':
     console.setWindowTitle('Console')
     console.setfont(QtGui.QFont('Lucida Sans Typewriter', 10))
 
-    # Redirect stdout to console.write and stderr to console.errorwrite
+    # Redirect stdout to console.write and stderr to `console.errorwrite`
     redirect = Redirect(console.errorwrite)
     with redirect_stdout(console), redirect_stderr(redirect):
         console.show()
