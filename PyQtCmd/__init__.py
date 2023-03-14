@@ -101,6 +101,16 @@ class QCmdLineEdit(QtWidgets.QLineEdit):
 
 
 class QCmdConsole(QtWidgets.QWidget):
+    """
+    Emulates a command-line interface.
+
+    Input is accepted via a QCmdLineEdit. The console will also echo anything
+    that is written to its `stdout`, `stderr`, and `stdin` streams. Input from
+    the line editor or written to `stdin` will be passed to an interpreter for
+    evaluation. Note that input written to `stdin` will only be passed to the
+    interpreter if the input ends with '\n'.
+    """
+
     class Stream(abc.ABC, io.TextIOBase):
 
         def __init__(self,
@@ -143,6 +153,25 @@ class QCmdConsole(QtWidgets.QWidget):
                  stderr_foreground: QtGui.QBrush | None = None,
                  parent=None
                  ):
+        """
+        :param interpreter: the function to evaluate input. If the interpreter
+        receives incomplete input, it can return True to indicate that input
+        should be accumulated until the interpreter returns False. This is the
+        same behavior as `code.InteractiveInterpreter.runsource`.
+        :param init_text: text to write to `stdout` when the console is created.
+        :param prompt_text: default text to show when prompting for input.
+        :param line_continuing_prompt_text: shown instead of `prompt_text` if
+        the last call to the interpreter returned True, indicating incomplete
+        input.
+        :param max_history: passed to `QCmdLineEdit` constructor
+        :param max_lines: maximum number of input/output/error lines that can be
+        displayed. Lines are dropped FIFO.
+        :param stdout_foreground: color for text from `stdout`. By default, it
+        matches `stdin`.
+        :param stderr_foreground: color for text from `stderr`. PBy default, it
+        matches `stdin`.
+        :param parent: passed to superclass constructor.
+        """
         super().__init__(parent=parent)
         self.interpreter = interpreter
         self.prompt_text = prompt_text
