@@ -36,6 +36,7 @@ class QCmdLineEdit(QtWidgets.QLineEdit):
                  *,
                  max_history: int | None = _default_max_history,
                  expand_tab: int | None = None,
+                 parent=None
                  ):
         """
         :param max_history: The maximum number of history entries that can be
@@ -43,7 +44,7 @@ class QCmdLineEdit(QtWidgets.QLineEdit):
         :param expand_tab: If `None`, tab characters are entered as `\t`.
         Otherwise, they are expanded to the specified number of spaces.
         """
-        super().__init__()
+        super().__init__(parent=parent)
         self.expand_tab = expand_tab
         self.history = collections.deque(maxlen=max_history)
         self.history_index = 0
@@ -54,10 +55,13 @@ class QCmdLineEdit(QtWidgets.QLineEdit):
 
     def keyPressEvent(self, a0: QtGui.QKeyEvent) -> None:
         if a0.key() == QtCore.Qt.Key_Return:
+            a0.accept()
             self._enter_line()
         elif a0.key() == QtCore.Qt.Key_Up:
+            a0.accept()
             self._prev()
         elif a0.key() == QtCore.Qt.Key_Down:
+            a0.accept()
             self._next()
         else:
             super().keyPressEvent(a0)
@@ -75,11 +79,12 @@ class QCmdLineEdit(QtWidgets.QLineEdit):
 
     def _enter_line(self) -> None:
         text = self.text()
-        self.history_index = 0
-        self.history[0] = text
         self.line_entered.emit(text)
-        self.history.appendleft('')
-        self._update()
+        if text:
+            self.history_index = 0
+            self.history[0] = text
+            self.history.appendleft('')
+            self._update()
 
     def _prev(self) -> None:
         if self.history_index < len(self.history) - 1:
@@ -153,20 +158,21 @@ class QCmdConsole(QtWidgets.QWidget):
         self.editor.line_entered.connect(self._push)
         self.editor.setFrame(False)
 
-        # FIXME prompt is not horizontally aligned with the display
+        # Prompt user for input
         self.prompt = QtWidgets.QLabel(self)
         self.prompt.setText(self.prompt_text)
         self.prompt.setBuddy(self.editor)
+        # Horizontally align with display
+        self.prompt.setContentsMargins(5, 0, 0, 0)
 
-        # FIXME remove empty space between input and history
-        #  currently one is stuck on the bottom and the other on the top;
-        #  textedit probably has a more aggressive size policy than lineedit
-        layout = QtWidgets.QGridLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout = QtWidgets.QVBoxLayout()
         layout.setSpacing(0)
-        layout.addWidget(self.display, 0, 0, 1, 2)
-        layout.addWidget(self.prompt, 1, 0)
-        layout.addWidget(self.editor, 1, 1)
+        layout.setContentsMargins(0, 0, 0, 0)
+        prompt_layout = QtWidgets.QHBoxLayout()
+        layout.addWidget(self.display)
+        prompt_layout.addWidget(self.prompt)
+        prompt_layout.addWidget(self.editor)
+        layout.addLayout(prompt_layout)
         self.setLayout(layout)
 
         # Use color to differentiate input, output and stderr
@@ -202,3 +208,5 @@ class QCmdConsole(QtWidgets.QWidget):
         if char_format is not None:
             self.display.setCurrentCharFormat(char_format)
         self.display.insertPlainText(text)
+        scroll = self.display.verticalScrollBar()
+        scroll.setValue(scroll.maximum())
