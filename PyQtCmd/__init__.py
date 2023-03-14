@@ -7,11 +7,8 @@ in a GUI application.
 Original by deanhystad available here: https://python-forum.io/thread-25117.html
 """
 import abc
-import code
 import collections
-import contextlib
 import io
-import sys
 import typing
 
 from PyQt5 import (
@@ -209,22 +206,3 @@ class QCmdConsole(QtWidgets.QWidget):
         if char_format is not None:
             self.display.setCurrentCharFormat(char_format)
         self.display.insertPlainText(text)
-
-
-if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
-    console = QCmdConsole(
-        init_text=f'Python {sys.version}\n',
-        interpreter=code.InteractiveConsole().runsource,
-        stdout_foreground=QtGui.QBrush(QtGui.QColorConstants.Cyan),
-        stderr_foreground=QtGui.QBrush(QtGui.QColorConstants.Red),
-    )
-    console.setWindowTitle('Console')
-    console.setFont(QtGui.QFont('Lucida Sans Typewriter', 10))
-    console.setPalette(QtGui.QPalette(
-        QtGui.QColorConstants.Black,
-    ))
-
-    with contextlib.redirect_stdout(console.stdout), contextlib.redirect_stderr(console.stderr):
-        console.show()
-        sys.exit(app.exec_())
