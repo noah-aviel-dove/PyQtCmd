@@ -1,11 +1,7 @@
-"""
-Console
+# Adapted from code by deanhystad.
+# Original available here: https://python-forum.io/thread-25117.html
 
-Interactive console widget. Use to add an interactive python interpreter
-in a GUI application.
 
-Original by deanhystad available here: https://python-forum.io/thread-25117.html
-"""
 import abc
 import collections
 import io

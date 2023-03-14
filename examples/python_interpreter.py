@@ -1,6 +1,7 @@
-"""
-Emulate the python REPL as a Qt widget
-"""
+# Emulate the python REPL as a Qt widget
+# Adapted from code by deanhystad.
+# Original available here: https://python-forum.io/thread-25117.html
+
 
 import code
 import contextlib
